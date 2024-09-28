@@ -1,9 +1,14 @@
 path: []const u8,
 
-pub fn init(abs_path: []const u8) !Self {
+pub fn init(alloc: Allocator, abs_path: []const u8) !Self {
     if (!std.fs.path.isAbsolute(abs_path)) return error.BadPathName;
     try std.fs.cwd().makePath(abs_path);
-    return .{ .path = abs_path };
+    return .{ .path = try alloc.dupe(u8, abs_path) };
+}
+
+pub fn deinit(self: *Self, alloc: Allocator) void {
+    alloc.free(self.path);
+    self.* = undefined;
 }
 
 /// Return error.FileNotFound if key is not in the cache. Caller owns
@@ -28,7 +33,7 @@ fn hash(in: []const u8) [Hash.digest_length]u8 {
 }
 
 test "absolute path required" {
-    try std.testing.expectError(error.BadPathName, Self.init("./foo"));
+    try std.testing.expectError(error.BadPathName, Self.init(std.testing.allocator, "./foo"));
 }
 
 test "init creates the path" {
@@ -41,7 +46,9 @@ test "init creates the path" {
     const cache_dir = try std.fs.path.join(alloc, &.{ realpath, "foo" });
     defer alloc.free(cache_dir);
 
-    _ = try Self.init(cache_dir);
+    var cache = try Self.init(alloc, cache_dir);
+    defer cache.deinit(alloc);
+
     try std.fs.accessAbsolute(cache_dir, .{});
 }
 
@@ -55,7 +62,8 @@ test "get and getFilePath" {
     const cache_dir = try std.fs.path.join(alloc, &.{ realpath, "foo" });
     defer alloc.free(cache_dir);
 
-    const cache = try Self.init(cache_dir);
+    var cache = try Self.init(alloc, cache_dir);
+    defer cache.deinit(alloc);
 
     // expect not found
     const bar_path = try cache.getFilePath(alloc, "bar");
