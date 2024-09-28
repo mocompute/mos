@@ -16,8 +16,10 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 const std = @import("std");
 
-pub const string = @import("string.zig");
+pub const download = @import("download.zig");
 pub const file = @import("file.zig");
+pub const string = @import("string.zig");
+
 pub const FileCache = @import("FileCache.zig");
 
 test {
