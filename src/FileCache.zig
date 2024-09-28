@@ -11,8 +11,8 @@ pub fn deinit(self: *Self, alloc: Allocator) void {
     self.* = undefined;
 }
 
-/// Return error.FileNotFound if key is not in the cache. Caller owns
-/// returned memory.
+/// Return absolute path. Return error.FileNotFound if key is not in
+/// the cache. Caller owns returned memory.
 pub fn get(self: Self, alloc: Allocator, key: []const u8) ![]const u8 {
     const file_path = try self.getFilePath(alloc, key);
     errdefer alloc.free(file_path);
@@ -20,6 +20,7 @@ pub fn get(self: Self, alloc: Allocator, key: []const u8) ![]const u8 {
     return file_path;
 }
 
+/// Return a file path where key may be stored. Caller owns returned memory.
 pub fn getFilePath(self: Self, alloc: Allocator, key: []const u8) ![]const u8 {
     const hash_key = hash(key);
     const hex = std.fmt.bytesToHex(hash_key, .lower);
@@ -90,4 +91,4 @@ const Self = @This();
 const std = @import("std");
 const Allocator = std.mem.Allocator;
 
-const Hash = std.crypto.hash.sha2.Sha256;
+const Hash = std.crypto.hash.sha2.Sha256T192;
