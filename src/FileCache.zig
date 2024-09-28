@@ -1,12 +1,9 @@
 path: []const u8,
 
-pub fn init(abs_path: []const u8) error{BadPathName}!Self {
+pub fn init(abs_path: []const u8) !Self {
     if (!std.fs.path.isAbsolute(abs_path)) return error.BadPathName;
+    try std.fs.cwd().makePath(abs_path);
     return .{ .path = abs_path };
-}
-
-pub fn ensurePath(self: Self) !void {
-    try std.fs.cwd().makePath(self.path);
 }
 
 /// Return error.FileNotFound if key is not in the cache. Caller owns
@@ -34,7 +31,7 @@ test "absolute path required" {
     try std.testing.expectError(error.BadPathName, Self.init("./foo"));
 }
 
-test "ensure path creates the path" {
+test "init creates the path" {
     const alloc = std.testing.allocator;
     var tmp = std.testing.tmpDir(.{});
     defer tmp.cleanup();
@@ -44,10 +41,7 @@ test "ensure path creates the path" {
     const cache_dir = try std.fs.path.join(alloc, &.{ realpath, "foo" });
     defer alloc.free(cache_dir);
 
-    const cache = try Self.init(cache_dir);
-    try std.testing.expectError(error.FileNotFound, std.fs.accessAbsolute(cache_dir, .{}));
-
-    try cache.ensurePath();
+    _ = try Self.init(cache_dir);
     try std.fs.accessAbsolute(cache_dir, .{});
 }
 
@@ -62,7 +56,6 @@ test "get and getFilePath" {
     defer alloc.free(cache_dir);
 
     const cache = try Self.init(cache_dir);
-    try cache.ensurePath();
 
     // expect not found
     const bar_path = try cache.getFilePath(alloc, "bar");
