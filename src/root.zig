@@ -16,10 +16,11 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 const std = @import("std");
 
-pub const string = @import("string.zig");
-pub const file = @import("file.zig");
 pub const download = @import("download.zig");
+pub const id = @import("id.zig");
+pub const file = @import("file.zig");
+pub const string = @import("string.zig");
 
 test {
-    std.testing.refAllDecls(@This());
+    std.testing.refAllDeclsRecursive(@This());
 }
