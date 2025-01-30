@@ -20,16 +20,21 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    _ = b.addModule("mos", .{
+    const mos = b.addModule("mos", .{
         .root_source_file = b.path("src/root.zig"),
         .target = target,
         .optimize = optimize,
     });
 
+    const test_filters: []const []const u8 = b.option(
+        []const []const u8,
+        "test_filter",
+        "Skip tests that do not match any of the specified filters",
+    ) orelse &.{};
+
     const tests = b.addTest(.{
-        .root_source_file = b.path("src/root.zig"),
-        .target = target,
-        .optimize = optimize,
+        .root_module = mos,
+        .filters = test_filters,
     });
 
     const run_tests = b.addRunArtifact(tests);
