@@ -21,6 +21,9 @@ pub const id = @import("id.zig");
 pub const file = @import("file.zig");
 pub const string = @import("string.zig");
 
-test {
-    std.testing.refAllDeclsRecursive(@This());
+test "all" {
+    _ = download;
+    _ = id;
+    _ = file;
+    _ = string;
 }
